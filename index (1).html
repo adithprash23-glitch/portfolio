@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adithya Prashanth</title>
+<meta name="description" content="Adithya Prashanth, computer engineering at UC Irvine. Embedded systems and the synth I'm building.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎹</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #FBFCFD; --ink: #15233D; --muted: #5A6880; --rule: #D5DCE5; --panel: #F1F4F8;
+  --green: #1E6B52; --copper: #B4692F; --hi: #E8F2EE;
+  --sans: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1726; --ink: #E6ECF4; --muted: #95A3B8; --rule: #26334A; --panel: #151F31;
+    --green: #4FB38E; --copper: #E0965A; --hi: #16302A;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1726; --ink: #E6ECF4; --muted: #95A3B8; --rule: #26334A; --panel: #151F31;
+  --green: #4FB38E; --copper: #E0965A; --hi: #16302A;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-behavior: smooth; scroll-padding-top: env(safe-area-inset-top, 0px); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.55; }
+a { color: var(--green); text-underline-offset: 3px; }
+a:hover { color: var(--copper); }
+:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+p { max-width: 68ch; margin: 0 0 1em; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+header { border-bottom: 2px solid var(--ink); padding: 14px 0 10px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+header b { color: var(--ink); }
+header nav { display: flex; gap: 18px; flex-wrap: wrap; }
+header nav a { color: var(--muted); text-decoration: none; }
+header nav a:hover { color: var(--ink); }
+
+.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; padding: 56px 0 40px; align-items: center; }
+.hero h1 { font-size: clamp(44px, 7vw, 84px); line-height: .95; margin: 0 0 18px; font-weight: 800; font-variation-settings: "wdth" 75; }
+.hero .lede { font-size: 19px; max-width: 40ch; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+.btn { display: inline-block; border: 1.5px solid var(--ink); color: var(--ink); background: transparent; padding: 9px 16px; border-radius: 3px; text-decoration: none; font: 600 15px var(--sans); cursor: pointer; }
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+.btn.primary:hover { background: var(--copper); border-color: var(--copper); }
+
+/* the chip in the hero */
+.chipzone { display: flex; flex-direction: column; align-items: center; }
+.chip { display: grid; grid-template-columns: 1fr auto 1fr; width: 100%; max-width: 460px; }
+.pins { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; }
+.pins.r { flex-direction: column-reverse; }
+.pin { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; font: 500 13.5px var(--mono); color: var(--ink); cursor: pointer; height: 26px; }
+.pins.l .pin { justify-content: flex-end; }
+.pin .leg { width: 26px; height: 10px; background: var(--rule); border: 1px solid var(--muted); }
+.pin .num { font-size: 10.5px; color: var(--muted); width: 16px; text-align: center; }
+.pin:hover .leg, .pin[aria-pressed="true"] .leg { background: var(--copper); border-color: var(--copper); }
+.pin[aria-pressed="true"] .lbl { color: var(--copper); }
+.body { width: 150px; background: var(--ink); color: var(--paper); border-radius: 6px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px; }
+.body::before { content: ""; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 28px; height: 14px; border-radius: 0 0 14px 14px; background: var(--paper); }
+.body::after { content: ""; position: absolute; top: 22px; left: 14px; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.body .pn { font: 800 24px var(--sans); font-variation-settings: "wdth" 75; }
+.body .sub { font: 400 11.5px var(--mono); opacity: .75; margin-top: 6px; }
+.pinread { margin-top: 16px; min-height: 64px; max-width: 460px; width: 100%; border-left: 3px solid var(--copper); padding: 6px 12px; font-size: 15px; background: var(--panel); }
+.pinread b { font-family: var(--mono); font-weight: 500; }
+
+section { padding: 44px 0; border-top: 1px solid var(--rule); }
+h2 { font-size: 30px; font-weight: 800; margin: 0 0 12px; font-variation-settings: "wdth" 80; line-height: 1.15; }
+h3 { font-size: 20px; margin: 28px 0 8px; }
+.muted { color: var(--muted); }
+
+.diagram { background: var(--panel); border: 1px solid var(--rule); padding: 16px; overflow-x: auto; margin: 18px 0; }
+.diagram svg { display: block; min-width: 700px; width: 100%; height: auto; }
+.diagram text { font-family: var(--mono); fill: var(--ink); }
+
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 480px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { border-bottom: 2px solid var(--ink); }
+td.m { font-family: var(--mono); font-size: 13.5px; white-space: nowrap; }
+
+.panel { border: 1px solid var(--rule); background: var(--panel); padding: 16px; border-radius: 4px; min-width: 0; margin-top: 16px; }
+.panel h3 { margin: 0 0 4px; font-size: 17px; }
+.hint { font-size: 13.5px; color: var(--muted); margin: 0 0 12px; }
+canvas { display: block; width: 100%; background: var(--paper); border: 1px solid var(--rule); border-radius: 2px; }
+.ctrls { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px; margin: 12px 0; }
+.ctrl label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.ctrl label span { font-family: var(--mono); color: var(--ink); }
+input[type=range] { width: 100%; accent-color: var(--green); }
+select { font: inherit; font-size: 14px; padding: 4px 6px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 3px; width: 100%; }
+.kbd { position: relative; height: 120px; margin-top: 10px; user-select: none; -webkit-user-select: none; touch-action: none; }
+.kbd .w { position: absolute; top: 0; bottom: 0; background: #fff; border: 1px solid #7a8699; border-radius: 0 0 4px 4px; }
+.kbd .b { position: absolute; top: 0; height: 62%; background: #1b2333; border-radius: 0 0 3px 3px; z-index: 2; }
+.kbd .on { background: var(--copper) !important; }
+.kbd .k { font: 500 10px var(--mono); position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; color: #7a8699; pointer-events: none; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.readout { font: 13px var(--mono); color: var(--muted); }
+.readout b { color: var(--ink); font-weight: 500; }
+
+.trainer { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+.lcd { background: #C7D4A8; color: #1d2a10; font: 500 14px var(--mono); padding: 10px 12px; border-radius: 3px; border: 2px solid #6f7d55; line-height: 1.5; white-space: pre; overflow-x: auto; }
+textarea { width: 100%; font: 14px var(--mono); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 3px; padding: 8px; resize: vertical; min-height: 64px; }
+.dis { font: 13px var(--mono); margin: 10px 0 0; padding: 0; list-style: none; max-height: 220px; overflow: auto; border: 1px solid var(--rule); background: var(--paper); }
+.dis li { padding: 2px 8px; white-space: pre; }
+.dis li.pc { background: var(--hi); color: var(--green); }
+.regs { width: 100%; font: 13px var(--mono); min-width: 0; }
+.regs td { padding: 3px 6px; }
+.msg { color: var(--copper); font-size: 13.5px; min-height: 1.2em; margin-top: 6px; }
+
+.job { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.job:last-child { border-bottom: 0; }
+.job .when { color: var(--muted); font-size: 14.5px; }
+.job .when b { display: block; color: var(--ink); font-size: 16px; }
+.job h3 { margin: 0 0 6px; }
+.job ul { margin: 6px 0 0; padding-left: 18px; }
+.job li { margin-bottom: 6px; max-width: 68ch; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.cols > *, .trainer > *, .hero > * { min-width: 0; }
+footer { border-top: 2px solid var(--ink); margin-top: 20px; padding: 18px 0 40px; font-size: 13.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.themebtn { background: none; border: 1px solid var(--rule); color: var(--muted); font: inherit; font-size: 13px; padding: 3px 10px; border-radius: 3px; cursor: pointer; }
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; gap: 32px; padding-top: 36px; }
+  .trainer, .cols { grid-template-columns: 1fr; }
+  .job { grid-template-columns: 1fr; gap: 6px; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  .pin { font-size: 12px; gap: 5px; }
+  .pin .leg { width: 14px; }
+  .body { width: 104px; }
+  .body .pn { font-size: 19px; }
+  h2 { font-size: 25px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div><b>Adithya Prashanth</b></div>
+  <nav>
+    <a href="#synth">Synth</a><a href="#play">Play it</a><a href="#experience">Experience</a><a href="#school">School</a><a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Adithya Prashanth</h1>
+    <p class="lede">I'm a computer engineering student at UC Irvine (class of 2029), mostly into embedded systems. Right now I'm building a synthesizer out of an STM32 and an FPGA, mainly because I've played keyboard since I was four and wanted to build the instrument instead of just playing one. There's a browser version of it further down that you can actually play.</p>
+    <div class="links">
+      <a class="btn primary" href="#play">Play the synth</a>
+      <a class="btn" href="https://www.linkedin.com/in/adithya-prashanth-aa878633a" target="_blank" rel="noopener">LinkedIn</a>
+      <a class="btn" href="https://github.com/adithprash23-glitch" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+  <div class="chipzone">
+    <div class="chip" role="group" aria-label="Skills, click a pin to see where I used it">
+      <div class="pins l" id="pinsL"></div>
+      <div class="body"><div class="pn">AP-29</div><div class="sub">UCI CpE</div></div>
+      <div class="pins r" id="pinsR"></div>
+    </div>
+    <div class="pinread" id="pinread" aria-live="polite">Click a pin to see where I've used it.</div>
+  </div>
+</div>
+
+<section id="synth">
+  <h2>The synth I'm building</h2>
+  <p>I started this in late September and I'm aiming to have it working in about six weeks. It's a 4-voice synth that I can play from my own keyboard.</p>
+  <p>The plan is to split it up the way a lot of real synths are built. An STM32 reads the MIDI notes coming in from the keyboard and the knob positions, then sends the settings to an FPGA over SPI. The FPGA makes the actual sound in Verilog: four oscillators, an envelope on each one (attack, decay, sustain, release), and a lowpass filter. The audio goes out over I2S to a DAC and then to a speaker.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 960 180" role="img" aria-label="MIDI keyboard to STM32, STM32 to FPGA over SPI, FPGA to DAC over I2S, DAC to speaker">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--copper)"/></marker></defs>
+      <g fill="none" stroke="var(--ink)" stroke-width="1.5">
+        <rect x="10" y="50" width="120" height="60" rx="3"/>
+        <rect x="200" y="40" width="190" height="80" rx="3" stroke="var(--green)" stroke-width="2"/>
+        <rect x="460" y="40" width="200" height="80" rx="3" stroke="var(--green)" stroke-width="2"/>
+        <rect x="730" y="50" width="100" height="60" rx="3"/>
+        <rect x="866" y="55" width="88" height="50" rx="3"/>
+      </g>
+      <g stroke="var(--copper)" stroke-width="2" fill="none" marker-end="url(#ah)">
+        <path d="M130,80 H198"/><path d="M390,80 H458"/><path d="M660,80 H728"/><path d="M830,80 H864"/>
+      </g>
+      <g font-size="13" text-anchor="middle">
+        <text x="70" y="77">MIDI</text><text x="70" y="95">keyboard</text>
+        <text x="164" y="70" font-size="11" fill="var(--muted)">MIDI</text>
+        <text x="295" y="70" font-weight="500">STM32</text>
+        <text x="295" y="92" font-size="11.5">reads notes + knobs</text>
+        <text x="424" y="70" font-size="11" fill="var(--muted)">SPI</text>
+        <text x="560" y="70" font-weight="500">FPGA (Verilog)</text>
+        <text x="560" y="92" font-size="11.5">oscillators, envelopes,</text>
+        <text x="560" y="108" font-size="11.5">filter</text>
+        <text x="694" y="70" font-size="11" fill="var(--muted)">I2S</text>
+        <text x="780" y="85">DAC</text>
+        <text x="910" y="85">speaker</text>
+      </g>
+    </svg>
+  </div>
+
+  <p><b>Parts:</b> STM32 Nucleo-F446RE, Tang Nano 20K FPGA board, PCM5102A DAC.</p>
+  <p><b>Where it's at:</b> still building. I'll put the code and a demo video here once it actually makes sound.</p>
+</section>
+
+<section id="play">
+  <h2>Play it</h2>
+  <p>This is a browser version of the same idea, so you can hear what I'm going for. Each voice has a counter that adds a fixed number every sample, and the size of that number sets the pitch (that's how the oscillators on the FPGA are going to work too). Then the envelope shapes how loud the note is over time.</p>
+
+  <div class="panel">
+    <h3>Synth</h3>
+    <p class="hint">Click the keys, or use your computer keyboard: A W S E D F T G Y H U J K. Z and X shift the octave. If you have a MIDI keyboard, plug it in and click connect (works in Chrome).</p>
+    <canvas id="scope" height="150" aria-label="Waveform of the synth output"></canvas>
+    <div class="ctrls">
+      <div class="ctrl"><label for="wave">Wave</label><select id="wave"><option value="0">Saw</option><option value="1">Square</option><option value="2">Sine</option></select></div>
+      <div class="ctrl"><label for="atk">Attack <span id="atkv">10 ms</span></label><input id="atk" type="range" min="1" max="1000" value="10"></div>
+      <div class="ctrl"><label for="dec">Decay <span id="decv">200 ms</span></label><input id="dec" type="range" min="1" max="1500" value="200"></div>
+      <div class="ctrl"><label for="sus">Sustain <span id="susv">60%</span></label><input id="sus" type="range" min="0" max="100" value="60"></div>
+      <div class="ctrl"><label for="rel">Release <span id="relv">300 ms</span></label><input id="rel" type="range" min="1" max="2000" value="300"></div>
+      <div class="ctrl"><label for="cut">Filter <span id="cutv">3000 Hz</span></label><input id="cut" type="range" min="80" max="12000" value="3000"></div>
+    </div>
+    <div class="kbd" id="kbd" aria-label="Piano keyboard"></div>
+    <div class="row">
+      <button class="btn" id="midibtn" type="button">Connect MIDI keyboard</button>
+      <span class="readout">MIDI in: <b id="midiread">nothing yet</b></span>
+      <span class="readout">Voices: <b id="voiceread">- - - -</b></span>
+    </div>
+  </div>
+
+  <h3>8051 trainer kit</h3>
+  <p>In my high school electronics lab we programmed an 8051 trainer kit by typing hex opcodes straight into memory, running them, and checking the results in binary. This is a small version of that kit. The program that's loaded multiplies 3 by 5 by adding 3 five times, since the loop is easier to follow than the MUL instruction.</p>
+  <div class="panel">
+    <div class="trainer">
+      <div>
+        <label for="hex" class="muted" style="font-size:13.5px">Program at 8000h (hex bytes)</label>
+        <textarea id="hex" spellcheck="false">E4 78 05 24 03 D8 FC 80 FE</textarea>
+        <div class="row">
+          <button class="btn primary" id="step" type="button">Step</button>
+          <button class="btn" id="run" type="button">Run</button>
+          <button class="btn" id="reset" type="button">Load and reset</button>
+        </div>
+        <div class="msg" id="msg" role="status"></div>
+        <ul class="dis" id="dis" aria-label="Program listing"></ul>
+      </div>
+      <div>
+        <div class="lcd" id="lcd" aria-live="polite"></div>
+        <table class="regs" id="regs"></table>
+        <p class="muted" style="font-size:12.5px;margin-top:8px">Only handles some instructions: MOV, ADD, ADDC, SUBB, INC, DEC, ANL, ORL, XRL, RL, RR, CLR, CPL, SJMP, JZ, JNZ, DJNZ, NOP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <h2>Experience</h2>
+
+  <div class="job">
+    <div class="when"><b>TeliBrahma Technologies</b>Sep 2026 to now</div>
+    <div>
+      <h3>AI and Automation Intern</h3>
+      <ul>
+        <li>Working on a tool that reads airline and hotel invoice PDFs and pulls out the fields we need. The hard part is that every airline and hotel formats their invoices differently.</li>
+        <li>The pulled-out data is used for tax reconciliation, so the numbers have to match up, not just get extracted.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="job">
+    <div class="when"><b>JEF Techno Solutions</b>Bengaluru, India</div>
+    <div>
+      <h3>Engineering Intern</h3>
+      <ul>
+        <li>Went on site audits of the earthing and lightning protection systems at Bangalore and Mumbai airports.</li>
+        <li>Helped with the audit reports afterwards.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="job">
+    <div class="when"><b>Beall Applied Innovation, UCI</b>2026 to now</div>
+    <div>
+      <h3>Audio Visual Technical Student Assistant</h3>
+      <ul>
+        <li>Set up and run the AV equipment for events at UCI's innovation center, and fix it when something stops working mid-event.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="job">
+    <div class="when"><b>Side project</b>2026</div>
+    <div>
+      <h3>Mergeon</h3>
+      <ul>
+        <li>A Python app that pulls M&amp;A deal news from RSS feeds and organizes it using LLM APIs. <a href="https://m-a-repo-adithya.vercel.app/" target="_blank" rel="noopener">Live here</a>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="school">
+  <h2>School</h2>
+  <div class="cols">
+    <div>
+      <h3>UC Irvine</h3>
+      <p>B.S. Computer Engineering, also doing a B.S. in Applied and Computational Mathematics. GPA 3.71.</p>
+      <div class="tw"><table>
+        <thead><tr><th>Course</th><th>What we did</th></tr></thead>
+        <tbody>
+          <tr><td class="m">EECS 31L</td><td>Digital logic lab (A+). Built a single-cycle RISC-V processor in Verilog and debugged it</td></tr>
+          <tr><td class="m">EECS 31</td><td>Digital logic design (A-). Combinational logic, FSMs</td></tr>
+          <tr><td class="m">EECS 20</td><td>Computer systems and C (taking it now)</td></tr>
+          <tr><td class="m">EECS 12</td><td>Intro to programming</td></tr>
+          <tr><td class="m">Physics 7C, 7D</td><td>Mechanics, electricity and magnetism</td></tr>
+          <tr><td class="m">Math 2D, 3A</td><td>Multivariable calc, linear algebra</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <h3>High school</h3>
+      <p>I took Electronics as a subject for both years of 11th and 12th grade (Karnataka state board, 97% overall). We covered transistors, op-amps, digital logic and microprocessors, and the lab was where I first programmed an 8051. I did my first bit of Verilog around then too.</p>
+      <p>So the logic gates in EECS 31 weren't new to me, which helped a lot once the lab got to building a whole processor.</p>
+      <h3>Other stuff</h3>
+      <p>I've played keyboard since I was four and have done 100+ concerts across India. I also played chess at the national level in India, and I'm an associate consultant with 180 Degrees Consulting at UCI.</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <h2>Contact</h2>
+  <p>I'm looking for embedded, firmware and FPGA internships, and hardware teams at UCI. LinkedIn is the fastest way to reach me.</p>
+  <div class="row">
+    <a class="btn primary" href="https://www.linkedin.com/in/adithya-prashanth-aa878633a" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="btn" href="https://github.com/adithprash23-glitch" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <span>Adithya Prashanth, 2026</span>
+  <button class="themebtn" id="theme" type="button">Light / dark</button>
+</footer>
+</div>
+
+<script>
+// Arduino projects. Add one like this and the section shows up under Experience:
+// { title: "Line follower", parts: "Arduino Uno, IR sensors, L298N", what: "What it does", link: "" }
+const ARDUINO_PROJECTS = [];
+
+if (ARDUINO_PROJECTS.length) {
+  const sec = document.createElement('div');
+  sec.innerHTML = '<h3 style="margin-top:32px">Arduino projects</h3>';
+  for (const p of ARDUINO_PROJECTS) {
+    const d = document.createElement('div');
+    d.className = 'job';
+    d.innerHTML = '<div class="when"><b></b><span></span></div><div><p></p></div>';
+    d.querySelector('b').textContent = p.title;
+    d.querySelector('span').textContent = p.parts || '';
+    d.querySelector('p').textContent = p.what || '';
+    if (p.link) {
+      const a = document.createElement('a');
+      a.href = p.link; a.textContent = ' Link'; a.target = '_blank';
+      d.querySelector('p').appendChild(a);
+    }
+    sec.appendChild(d);
+  }
+  document.getElementById('experience').appendChild(sec);
+}
+
+// light / dark toggle
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+document.getElementById('theme').onclick = () => {
+  const r = document.documentElement;
+  const isDark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = isDark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', r.dataset.theme); } catch (e) {}
+};
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+
+// chip pins
+const PINS = [
+  ['C', "Learning it properly in EECS 20 right now. The STM32 side of the synth is going to be in C."],
+  ['Verilog', "EECS 31L, where I built a single-cycle RISC-V processor. The synth's sound side is going to be in Verilog too."],
+  ['8051 asm', "High school lab. We typed opcodes into a trainer kit by hand and read the results in binary."],
+  ['Python', "Mergeon, and the invoice PDF work at TeliBrahma."],
+  ['FSMs', "EECS 31 and 31L."],
+  ['RISC-V', "The 31L processor: datapath, ALU, register file and the control unit."],
+  ['Waveforms', "Most of my 31L debugging was going through simulation waveforms until I found where a signal went wrong."],
+  ['Transistors', "High school electronics, both years."],
+  ['Op-amps', "Also high school electronics."],
+  ['Logic', "Started in high school, then EECS 31 and 31L at UCI."],
+  ['Earthing', "JEF Techno Solutions. Went on earthing audits at Bangalore and Mumbai airports."],
+  ['Lightning', "Same internship, on the lightning protection side."],
+  ['AV', "My job at Beall Applied Innovation, setting up and running AV for events."],
+  ['Keyboard', "I've played since I was four, 100+ concerts. It's the reason I'm building a synth."],
+];
+const pinsL = document.getElementById('pinsL');
+const pinsR = document.getElementById('pinsR');
+const pinread = document.getElementById('pinread');
+const half = PINS.length / 2;
+PINS.forEach(([name, text], i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pin';
+  b.setAttribute('aria-pressed', 'false');
+  const num = i + 1;
+  b.innerHTML = i < half
+    ? `<span class="lbl"></span><span class="num">${num}</span><span class="leg"></span>`
+    : `<span class="leg"></span><span class="num">${num}</span><span class="lbl"></span>`;
+  b.querySelector('.lbl').textContent = name;
+  b.onclick = () => {
+    document.querySelectorAll('.pin').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    b.setAttribute('aria-pressed', 'true');
+    pinread.innerHTML = '';
+    const h = document.createElement('b');
+    h.textContent = name + ': ';
+    pinread.append(h, text);
+  };
+  (i < half ? pinsL : pinsR).appendChild(b);
+});
+
+
+// synth
+// Each voice keeps a 32-bit phase counter and adds "inc" to it every sample.
+// Bigger inc = faster wrap = higher pitch. The top bits of the phase give the waveform.
+class Engine {
+  constructor(fs) {
+    this.fs = fs;
+    this.voices = [0, 1, 2, 3].map(() => ({ phase: 0, inc: 0, env: 0, stage: 0, note: -1, age: 0 }));
+    this.sine = new Int16Array(256);
+    for (let i = 0; i < 256; i++) this.sine[i] = Math.round(32767 * Math.sin(2 * Math.PI * i / 256));
+    this.wave = 0; this.y = 0; this.count = 0; this.k = 0.3;
+    this.setEnv(10, 200, 0.6, 300);
+  }
+  msg(m) {
+    if (m.t === 'on') this.noteOn(m.n);
+    else if (m.t === 'off') this.noteOff(m.n);
+    else if (m.t === 'set') { this.wave = m.wave; this.k = m.k; this.setEnv(m.a, m.d, m.s, m.r); }
+  }
+  setEnv(a, d, s, r) {
+    // how much the envelope moves per sample for each stage
+    this.aStep = 1 / (a * this.fs / 1000);
+    this.dStep = 1 / (d * this.fs / 1000);
+    this.sus = s;
+    this.rStep = 1 / (r * this.fs / 1000);
+  }
+  noteOn(n) {
+    // reuse a free voice, otherwise steal the oldest one
+    let v = this.voices.find(x => x.stage === 0) || this.voices.reduce((a, b) => (a.age < b.age ? a : b));
+    v.note = n;
+    v.inc = Math.round(440 * Math.pow(2, (n - 69) / 12) * 4294967296 / this.fs) >>> 0;
+    v.stage = 1; // 1 attack, 2 decay, 3 sustain, 4 release, 0 off
+    v.age = ++this.count;
+  }
+  noteOff(n) {
+    for (const v of this.voices) if (v.note === n && v.stage > 0 && v.stage < 4) v.stage = 4;
+  }
+  render(out) {
+    for (let i = 0; i < out.length; i++) {
+      let mix = 0;
+      for (const v of this.voices) {
+        if (!v.stage) continue;
+        v.phase = (v.phase + v.inc) >>> 0;
+        let s;
+        if (this.wave === 0) s = (v.phase >>> 16) - 32768;                 // saw
+        else if (this.wave === 1) s = (v.phase & 0x80000000) ? 32767 : -32768; // square
+        else s = this.sine[v.phase >>> 24];                                 // sine table
+        if (v.stage === 1) { v.env += this.aStep; if (v.env >= 1) { v.env = 1; v.stage = 2; } }
+        else if (v.stage === 2) { v.env -= this.dStep; if (v.env <= this.sus) { v.env = this.sus; v.stage = 3; } }
+        else if (v.stage === 4) { v.env -= this.rStep; if (v.env <= 0) { v.env = 0; v.stage = 0; v.note = -1; } }
+        mix += s * v.env;
+      }
+      // simple one-pole lowpass filter
+      this.y += (mix / 4 - this.y) * this.k;
+      out[i] = this.y / 32768 * 0.6;
+    }
+    return this.voices.map(v => (v.stage ? v.note : -1));
+  }
+}
+
+const WORKLET = Engine.toString() + `
+class SynthProcessor extends AudioWorkletProcessor {
+  constructor() { super(); this.e = new Engine(sampleRate); this.n = 0; this.port.onmessage = m => this.e.msg(m.data); }
+  process(_, outputs) {
+    const out = outputs[0];
+    const v = this.e.render(out[0]);
+    for (let c = 1; c < out.length; c++) out[c].set(out[0]);
+    if (++this.n % 8 === 0) this.port.postMessage(v);
+    return true;
+  }
+}
+registerProcessor('synth', SynthProcessor);`;
+
+const settings = { wave: 0, a: 10, d: 200, s: 60, r: 300, cut: 3000 };
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const noteName = n => NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1);
+let ctx = null, analyser = null, send = null, starting = null, octave = 0;
+
+function showVoices(v) {
+  document.getElementById('voiceread').textContent = v.map(n => (n < 0 ? '-' : noteName(n))).join(' ');
+}
+
+async function startAudio() {
+  if (send) { if (ctx.state !== 'running') await ctx.resume(); return; }
+  if (starting) return starting;
+  starting = (async () => {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.connect(ctx.destination);
+    let node;
+    try {
+      const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(url);
+      node = new AudioWorkletNode(ctx, 'synth', { outputChannelCount: [2] });
+      node.port.onmessage = e => showVoices(e.data);
+      send = m => node.port.postMessage(m);
+    } catch (err) {
+      // older browsers: run the same engine on the main thread
+      const eng = new Engine(ctx.sampleRate);
+      let n = 0;
+      node = ctx.createScriptProcessor(1024, 0, 2);
+      node.onaudioprocess = e => {
+        const left = e.outputBuffer.getChannelData(0);
+        const v = eng.render(left);
+        e.outputBuffer.getChannelData(1).set(left);
+        if (++n % 4 === 0) showVoices(v);
+      };
+      send = m => eng.msg(m);
+    }
+    node.connect(analyser);
+    if (ctx.state !== 'running') await ctx.resume();
+    sendSettings();
+  })();
+  return starting;
+}
+
+function sendSettings() {
+  if (!send) return;
+  const k = 1 - Math.exp(-2 * Math.PI * settings.cut / ctx.sampleRate);
+  send({ t: 'set', wave: settings.wave, k, a: settings.a, d: settings.d, s: settings.s / 100, r: settings.r });
+}
+
+const held = new Set();
+async function noteOn(n, vel = 100, fromMidi = false) {
+  if (held.has(n)) return;
+  held.add(n);
+  try { await startAudio(); } catch (e) { document.getElementById('midiread').textContent = 'browser blocked audio'; return; }
+  send({ t: 'on', n });
+  keyLight(n, true);
+  if (!fromMidi) showMidi([0x90, n, vel]);
+}
+function noteOff(n, fromMidi = false) {
+  if (!held.has(n)) return;
+  held.delete(n);
+  if (send) send({ t: 'off', n });
+  keyLight(n, false);
+  if (!fromMidi) showMidi([0x80, n, 0]);
+}
+function showMidi(bytes) {
+  document.getElementById('midiread').textContent = bytes.map(x => x.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+}
+
+// knobs
+const knobs = [['wave', 'wave', null, ''], ['atk', 'a', 'atkv', ' ms'], ['dec', 'd', 'decv', ' ms'], ['sus', 's', 'susv', '%'], ['rel', 'r', 'relv', ' ms'], ['cut', 'cut', 'cutv', ' Hz']];
+for (const [id, key, labelId, unit] of knobs) {
+  document.getElementById(id).addEventListener('input', e => {
+    settings[key] = +e.target.value;
+    if (labelId) document.getElementById(labelId).textContent = e.target.value + unit;
+    sendSettings();
+  });
+}
+
+// on-screen keyboard, C4 to B5
+const kbd = document.getElementById('kbd');
+const keys = {};
+const PC_KEYS = 'awsedftgyhujk';
+const isBlack = n => [1, 3, 6, 8, 10].includes(n % 12);
+const whites = [];
+for (let n = 60; n <= 83; n++) if (!isBlack(n)) whites.push(n);
+const W = 100 / whites.length;
+whites.forEach((n, i) => {
+  const d = document.createElement('div');
+  d.className = 'w'; d.style.left = i * W + '%'; d.style.width = W + '%'; d.dataset.n = n;
+  kbd.appendChild(d); keys[n] = d;
+});
+for (let n = 60; n <= 83; n++) {
+  if (!isBlack(n)) continue;
+  const i = whites.indexOf(n - 1);
+  const d = document.createElement('div');
+  d.className = 'b'; d.style.left = ((i + 1) * W - W * 0.3) + '%'; d.style.width = W * 0.6 + '%'; d.dataset.n = n;
+  kbd.appendChild(d); keys[n] = d;
+}
+function labelKeys() {
+  kbd.querySelectorAll('.k').forEach(k => k.remove());
+  [...PC_KEYS].forEach((c, i) => {
+    const el = keys[60 + octave * 12 + i];
+    if (!el) return;
+    const s = document.createElement('span');
+    s.className = 'k'; s.textContent = c.toUpperCase();
+    el.appendChild(s);
+  });
+}
+labelKeys();
+function keyLight(n, on) { if (keys[n]) keys[n].classList.toggle('on', on); }
+
+const pointerNote = new Map();
+kbd.addEventListener('pointerdown', e => {
+  const t = e.target.closest('[data-n]');
+  if (!t) return;
+  kbd.setPointerCapture(e.pointerId);
+  pointerNote.set(e.pointerId, +t.dataset.n);
+  noteOn(+t.dataset.n);
+});
+kbd.addEventListener('pointermove', e => {
+  if (!pointerNote.has(e.pointerId)) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const t = el && el.closest && el.closest('#kbd [data-n]');
+  if (!t) return;
+  const n = +t.dataset.n, prev = pointerNote.get(e.pointerId);
+  if (n !== prev) { noteOff(prev); noteOn(n); pointerNote.set(e.pointerId, n); }
+});
+const release = e => {
+  if (!pointerNote.has(e.pointerId)) return;
+  noteOff(pointerNote.get(e.pointerId));
+  pointerNote.delete(e.pointerId);
+};
+kbd.addEventListener('pointerup', release);
+kbd.addEventListener('pointercancel', release);
+
+window.addEventListener('keydown', e => {
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z') { octave = Math.max(-1, octave - 1); labelKeys(); return; }
+  if (k === 'x') { octave = Math.min(1, octave + 1); labelKeys(); return; }
+  const i = PC_KEYS.indexOf(k);
+  if (i >= 0) { e.preventDefault(); noteOn(60 + octave * 12 + i); }
+});
+window.addEventListener('keyup', e => {
+  const i = PC_KEYS.indexOf(e.key.toLowerCase());
+  if (i >= 0) for (const o of [-1, 0, 1]) noteOff(60 + o * 12 + i);
+});
+
+// real MIDI keyboard (Chrome / Edge)
+document.getElementById('midibtn').onclick = async () => {
+  const b = document.getElementById('midibtn');
+  if (!navigator.requestMIDIAccess) { b.textContent = 'No MIDI support in this browser, try Chrome'; return; }
+  try {
+    await startAudio();
+    const access = await navigator.requestMIDIAccess();
+    let count = 0;
+    access.inputs.forEach(input => {
+      count++;
+      input.onmidimessage = m => {
+        const d = [...m.data];
+        if (d.length < 3) return;
+        showMidi(d);
+        const status = d[0] & 0xF0;
+        if (status === 0x90 && d[2] > 0) noteOn(d[1], d[2], true);
+        else if (status === 0x80 || (status === 0x90 && d[2] === 0)) noteOff(d[1], true);
+      };
+    });
+    b.textContent = count ? 'MIDI connected' : 'No MIDI keyboard found';
+  } catch (e) {
+    b.textContent = 'MIDI access was blocked';
+  }
+};
+
+// waveform display
+const scope = document.getElementById('scope');
+const sctx = scope.getContext('2d');
+const scopeData = new Uint8Array(2048);
+const baseHeight = scope.height;
+scope.style.height = baseHeight + 'px';
+function drawScope() {
+  const dpr = devicePixelRatio || 1;
+  const w = Math.round(scope.getBoundingClientRect().width * dpr);
+  if (w && scope.width !== w) { scope.width = w; scope.height = baseHeight * dpr; }
+  const W = scope.width, H = scope.height;
+  sctx.fillStyle = cssVar('--paper'); sctx.fillRect(0, 0, W, H);
+  sctx.strokeStyle = cssVar('--rule'); sctx.lineWidth = 1;
+  for (let i = 1; i < 10; i++) { sctx.beginPath(); sctx.moveTo(i * W / 10, 0); sctx.lineTo(i * W / 10, H); sctx.stroke(); }
+  for (let i = 1; i < 4; i++) { sctx.beginPath(); sctx.moveTo(0, i * H / 4); sctx.lineTo(W, i * H / 4); sctx.stroke(); }
+  sctx.strokeStyle = cssVar('--green'); sctx.lineWidth = 2 * dpr; sctx.beginPath();
+  if (analyser) {
+    analyser.getByteTimeDomainData(scopeData);
+    // start drawing at a rising zero crossing so the wave doesn't jump around
+    let start = 0;
+    for (let i = 1; i < 1024; i++) if (scopeData[i - 1] < 128 && scopeData[i] >= 128) { start = i; break; }
+    for (let i = 0; i < 1024; i++) {
+      const x = i * W / 1024, y = (1 - scopeData[start + i] / 255) * H;
+      i ? sctx.lineTo(x, y) : sctx.moveTo(x, y);
+    }
+  } else {
+    sctx.moveTo(0, H / 2); sctx.lineTo(W, H / 2);
+  }
+  sctx.stroke();
+  requestAnimationFrame(drawScope);
+}
+requestAnimationFrame(drawScope);
+
+
+// 8051 trainer
+const cpu = { A: 0, R: new Uint8Array(8), CY: 0, AC: 0, OV: 0, PC: 0, mem: new Uint8Array(256), len: 0, done: false };
+const hex = (v, n = 2) => v.toString(16).toUpperCase().padStart(n, '0');
+const signed = b => (b > 127 ? b - 256 : b);
+const bin = v => v.toString(2).padStart(8, '0').replace(/(.{4})/, '$1 ');
+const parity = a => { let p = 0; for (let i = 0; i < 8; i++) p ^= (a >> i) & 1; return p; };
+
+function add(v, c) {
+  const a = cpu.A, r = a + v + c;
+  cpu.AC = ((a & 0xF) + (v & 0xF) + c) > 0xF ? 1 : 0;
+  const carry6 = ((a & 0x7F) + (v & 0x7F) + c) > 0x7F;
+  cpu.CY = r > 0xFF ? 1 : 0;
+  cpu.OV = carry6 !== (cpu.CY === 1) ? 1 : 0;
+  cpu.A = r & 0xFF;
+}
+function subb(v) {
+  const a = cpu.A, c = cpu.CY, r = a - v - c;
+  cpu.AC = ((a & 0xF) - (v & 0xF) - c) < 0 ? 1 : 0;
+  const borrow6 = ((a & 0x7F) - (v & 0x7F) - c) < 0;
+  cpu.CY = r < 0 ? 1 : 0;
+  cpu.OV = borrow6 !== (cpu.CY === 1) ? 1 : 0;
+  cpu.A = r & 0xFF;
+}
+
+// returns [text, length in bytes] for the instruction at pc
+function decode(pc) {
+  const op = cpu.mem[pc], b1 = cpu.mem[(pc + 1) & 0xFF], n = op & 7;
+  const target = hex((0x8000 + pc + 2 + signed(b1)) & 0xFFFF, 4) + 'h';
+  const table = {
+    0x00: ['NOP', 1], 0x04: ['INC A', 1], 0x14: ['DEC A', 1],
+    0x24: [`ADD A,#${hex(b1)}h`, 2], 0x34: [`ADDC A,#${hex(b1)}h`, 2], 0x94: [`SUBB A,#${hex(b1)}h`, 2],
+    0x74: [`MOV A,#${hex(b1)}h`, 2], 0x54: [`ANL A,#${hex(b1)}h`, 2], 0x44: [`ORL A,#${hex(b1)}h`, 2], 0x64: [`XRL A,#${hex(b1)}h`, 2],
+    0x23: ['RL A', 1], 0x03: ['RR A', 1], 0xE4: ['CLR A', 1], 0xF4: ['CPL A', 1], 0xC3: ['CLR C', 1], 0xD3: ['SETB C', 1],
+    0x80: ['SJMP ' + target, 2], 0x60: ['JZ ' + target, 2], 0x70: ['JNZ ' + target, 2],
+  };
+  if (table[op]) return table[op];
+  if (op >= 0x78 && op <= 0x7F) return [`MOV R${n},#${hex(b1)}h`, 2];
+  if (op >= 0xE8 && op <= 0xEF) return [`MOV A,R${n}`, 1];
+  if (op >= 0xF8) return [`MOV R${n},A`, 1];
+  if (op >= 0x28 && op <= 0x2F) return [`ADD A,R${n}`, 1];
+  if (op >= 0x08 && op <= 0x0F) return [`INC R${n}`, 1];
+  if (op >= 0xD8 && op <= 0xDF) return [`DJNZ R${n},` + target, 2];
+  return [null, 1];
+}
+
+function step() {
+  if (cpu.done) return false;
+  const pc = cpu.PC, op = cpu.mem[pc], b1 = cpu.mem[(pc + 1) & 0xFF], n = op & 7;
+  const [text, len] = decode(pc);
+  if (!text) { setMsg(`Don't know opcode ${hex(op)}h at ${hex(0x8000 + pc, 4)}h, stopped.`); cpu.done = true; return false; }
+  let next = (pc + len) & 0xFF;
+  const jump = () => { next = (next + signed(b1)) & 0xFF; };
+
+  if (op === 0x04) cpu.A = (cpu.A + 1) & 0xFF;
+  else if (op === 0x14) cpu.A = (cpu.A - 1) & 0xFF;
+  else if (op === 0x24) add(b1, 0);
+  else if (op === 0x34) add(b1, cpu.CY);
+  else if (op === 0x94) subb(b1);
+  else if (op === 0x74) cpu.A = b1;
+  else if (op === 0x54) cpu.A &= b1;
+  else if (op === 0x44) cpu.A |= b1;
+  else if (op === 0x64) cpu.A ^= b1;
+  else if (op === 0x23) cpu.A = ((cpu.A << 1) | (cpu.A >> 7)) & 0xFF;
+  else if (op === 0x03) cpu.A = ((cpu.A >> 1) | (cpu.A << 7)) & 0xFF;
+  else if (op === 0xE4) cpu.A = 0;
+  else if (op === 0xF4) cpu.A = ~cpu.A & 0xFF;
+  else if (op === 0xC3) cpu.CY = 0;
+  else if (op === 0xD3) cpu.CY = 1;
+  else if (op === 0x80) jump();
+  else if (op === 0x60) { if (cpu.A === 0) jump(); }
+  else if (op === 0x70) { if (cpu.A !== 0) jump(); }
+  else if (op >= 0x78 && op <= 0x7F) cpu.R[n] = b1;
+  else if (op >= 0xE8 && op <= 0xEF) cpu.A = cpu.R[n];
+  else if (op >= 0xF8) cpu.R[n] = cpu.A;
+  else if (op >= 0x28 && op <= 0x2F) add(cpu.R[n], 0);
+  else if (op >= 0x08 && op <= 0x0F) cpu.R[n] = (cpu.R[n] + 1) & 0xFF;
+  else if (op >= 0xD8 && op <= 0xDF) { cpu.R[n] = (cpu.R[n] - 1) & 0xFF; if (cpu.R[n] !== 0) jump(); }
+
+  // SJMP to itself (80 FE) is how the program "ends"
+  if (op === 0x80 && signed(b1) === -2) { cpu.done = true; setMsg('Reached SJMP $, program finished.'); }
+  cpu.PC = next;
+  return true;
+}
+
+function setMsg(t) { document.getElementById('msg').textContent = t; }
+
+function load() {
+  const parts = document.getElementById('hex').value.trim().split(/[\s,]+/).filter(Boolean);
+  const bytes = [];
+  for (const p of parts) {
+    if (!/^[0-9a-fA-F]{1,2}$/.test(p)) { setMsg(`"${p}" isn't a hex byte. Write them like 74 05.`); return; }
+    bytes.push(parseInt(p, 16));
+  }
+  cpu.mem.fill(0);
+  bytes.forEach((b, i) => (cpu.mem[i] = b));
+  cpu.len = bytes.length;
+  cpu.A = 0; cpu.R.fill(0); cpu.CY = cpu.AC = cpu.OV = 0; cpu.PC = 0; cpu.done = false;
+  setMsg('');
+  show();
+}
+
+function show() {
+  const list = document.getElementById('dis');
+  list.innerHTML = '';
+  for (let pc = 0, guard = 0; pc < Math.max(cpu.len, 1) && guard < 128; guard++) {
+    const [text, len] = decode(pc);
+    const li = document.createElement('li');
+    const bytes = [...Array(len)].map((_, i) => hex(cpu.mem[(pc + i) & 0xFF])).join(' ');
+    li.textContent = `${hex(0x8000 + pc, 4)}  ${bytes.padEnd(9)} ${text || '??'}`;
+    if (pc === cpu.PC) li.className = 'pc';
+    list.appendChild(li);
+    pc += len;
+  }
+  document.getElementById('lcd').textContent =
+    `PC ${hex(0x8000 + cpu.PC, 4)}h   A ${hex(cpu.A)}h\nA  ${bin(cpu.A)}b\nR0 ${bin(cpu.R[0])}b`;
+  const regs = document.getElementById('regs');
+  regs.innerHTML = '';
+  const rows = [['A', cpu.A], ...[...cpu.R].map((v, i) => ['R' + i, v])];
+  for (const [name, v] of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${name}</td><td>${hex(v)}h</td><td>${bin(v)}</td><td>${v}</td>`;
+    regs.appendChild(tr);
+  }
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>PSW</td><td colspan="3">CY ${cpu.CY}  AC ${cpu.AC}  OV ${cpu.OV}  P ${parity(cpu.A)}</td>`;
+  regs.appendChild(tr);
+}
+
+document.getElementById('step').onclick = () => { step(); show(); };
+document.getElementById('run').onclick = () => { for (let i = 0; i < 500 && step(); i++); show(); };
+document.getElementById('reset').onclick = load;
+load();
+</script>
+</body>
+</html>
