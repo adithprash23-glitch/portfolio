@@ -102,6 +102,7 @@ select { font: inherit; font-size: 14px; padding: 4px 6px; background: var(--pap
 .kbd .b { position: absolute; top: 0; height: 62%; background: #1b2333; border-radius: 0 0 3px 3px; z-index: 2; }
 .kbd .on { background: var(--copper) !important; }
 .kbd .k { font: 500 10px var(--mono); position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; color: #7a8699; pointer-events: none; }
+.kbd .b .k { color: #c3ccd9; bottom: 3px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
 .readout { font: 13px var(--mono); color: var(--muted); }
 .readout b { color: var(--ink); font-weight: 500; }
@@ -219,7 +220,7 @@ footer { border-top: 2px solid var(--ink); margin-top: 20px; padding: 18px 0 40p
 
   <div class="panel">
     <h3>Synth</h3>
-    <p class="hint">Click the keys, or use your computer keyboard: A W S E D F T G Y H U J K. Z and X shift the octave. If you have a MIDI keyboard, plug it in and click connect (works in Chrome).</p>
+    <p class="hint">Click the keys or use your laptop keyboard. The bottom row (Z to M) plays the lower octave and the top row (Q to U) plays the upper one, with the row above each as the sharps. Every key shows its letter. If you have a MIDI keyboard, plug it in and click connect (works in Chrome).</p>
     <canvas id="scope" height="150" aria-label="Waveform of the synth output"></canvas>
     <div class="ctrls">
       <div class="ctrl"><label for="wave">Wave</label><select id="wave"><option value="0">Saw</option><option value="1">Square</option><option value="2">Sine</option></select></div>
@@ -504,7 +505,7 @@ registerProcessor('synth', SynthProcessor);`;
 const settings = { wave: 0, a: 10, d: 200, s: 60, r: 300, cut: 3000 };
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const noteName = n => NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1);
-let ctx = null, analyser = null, send = null, starting = null, octave = 0;
+let ctx = null, analyser = null, send = null, starting = null;
 
 function showVoices(v) {
   document.getElementById('voiceread').textContent = v.map(n => (n < 0 ? '-' : noteName(n))).join(' ');
@@ -584,7 +585,18 @@ for (const [id, key, labelId, unit] of knobs) {
 // on-screen keyboard, C4 to B5
 const kbd = document.getElementById('kbd');
 const keys = {};
-const PC_KEYS = 'awsedftgyhujk';
+// laptop keys, two rows = two octaves (tracker-style layout)
+// bottom row: C4 to E5, top row: C5 to B5
+const KEYMAP = {
+  KeyZ: 60, KeyS: 61, KeyX: 62, KeyD: 63, KeyC: 64, KeyV: 65, KeyG: 66, KeyB: 67, KeyH: 68, KeyN: 69, KeyJ: 70, KeyM: 71,
+  Comma: 72, KeyL: 73, Period: 74, Semicolon: 75, Slash: 76,
+  KeyQ: 72, Digit2: 73, KeyW: 74, Digit3: 75, KeyE: 76, KeyR: 77, Digit5: 78, KeyT: 79, Digit6: 80, KeyY: 81, Digit7: 82, KeyU: 83,
+};
+// label shown on each on-screen key
+const LABELS = {
+  60: 'Z', 61: 'S', 62: 'X', 63: 'D', 64: 'C', 65: 'V', 66: 'G', 67: 'B', 68: 'H', 69: 'N', 70: 'J', 71: 'M',
+  72: 'Q', 73: '2', 74: 'W', 75: '3', 76: 'E', 77: 'R', 78: '5', 79: 'T', 80: '6', 81: 'Y', 82: '7', 83: 'U',
+};
 const isBlack = n => [1, 3, 6, 8, 10].includes(n % 12);
 const whites = [];
 for (let n = 60; n <= 83; n++) if (!isBlack(n)) whites.push(n);
@@ -601,17 +613,11 @@ for (let n = 60; n <= 83; n++) {
   d.className = 'b'; d.style.left = ((i + 1) * W - W * 0.3) + '%'; d.style.width = W * 0.6 + '%'; d.dataset.n = n;
   kbd.appendChild(d); keys[n] = d;
 }
-function labelKeys() {
-  kbd.querySelectorAll('.k').forEach(k => k.remove());
-  [...PC_KEYS].forEach((c, i) => {
-    const el = keys[60 + octave * 12 + i];
-    if (!el) return;
-    const s = document.createElement('span');
-    s.className = 'k'; s.textContent = c.toUpperCase();
-    el.appendChild(s);
-  });
+for (const [n, label] of Object.entries(LABELS)) {
+  const s = document.createElement('span');
+  s.className = 'k'; s.textContent = label;
+  keys[n].appendChild(s);
 }
-labelKeys();
 function keyLight(n, on) { if (keys[n]) keys[n].classList.toggle('on', on); }
 
 const pointerNote = new Map();
@@ -641,16 +647,17 @@ kbd.addEventListener('pointercancel', release);
 window.addEventListener('keydown', e => {
   if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
   if (['TEXTAREA', 'INPUT', 'SELECT'].includes(e.target.tagName)) return;
-  const k = e.key.toLowerCase();
-  if (k === 'z') { octave = Math.max(-1, octave - 1); labelKeys(); return; }
-  if (k === 'x') { octave = Math.min(1, octave + 1); labelKeys(); return; }
-  const i = PC_KEYS.indexOf(k);
-  if (i >= 0) { e.preventDefault(); noteOn(60 + octave * 12 + i); }
+  const n = KEYMAP[e.code];
+  if (n === undefined) return;
+  e.preventDefault();
+  noteOn(n);
 });
 window.addEventListener('keyup', e => {
-  const i = PC_KEYS.indexOf(e.key.toLowerCase());
-  if (i >= 0) for (const o of [-1, 0, 1]) noteOff(60 + o * 12 + i);
+  const n = KEYMAP[e.code];
+  if (n !== undefined) noteOff(n);
 });
+// if the tab loses focus while a key is held, let everything go
+window.addEventListener('blur', () => { for (const n of [...held]) noteOff(n); });
 
 // real MIDI keyboard (Chrome / Edge)
 document.getElementById('midibtn').onclick = async () => {
